@@ -19,7 +19,7 @@ class CustomerController extends Controller
         }
 
         // Only fetch customers for logged-in user
-        $customers = Customer::where('user_id', $user->id)
+        $customers = Customer::where('shopkeeper_id', $user->id)
             ->withSum('transactions', 'total')
             ->get()
             ->map(function ($customer) {

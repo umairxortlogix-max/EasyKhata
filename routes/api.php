@@ -15,7 +15,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 
 // ---------- Protected Routes ----------
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/customers/app', [CustomerController::class, 'index']);
+    Route::post('/customers/app', [CustomerController::class, 'index']);
     Route::post('/customers/store', [CustomerController::class, 'store']);
 });
 
