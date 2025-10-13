@@ -58,8 +58,8 @@ class TransactionController extends Controller
 
     public function create()
     {
-        $user=Auth::user()->id;
-        $customers = Customer::where('shopkeeper_id',$user)->get();
+        $user = Auth::user()->id;
+        $customers = Customer::where('shopkeeper_id', $user)->get();
         return view('admin.clients.customer.index', compact('customers'));
     }
 
@@ -86,7 +86,7 @@ class TransactionController extends Controller
             'paid' => $request->paid_amount,
             'remaining' => $request->remaining_amount,
         ]);
-    //    dd($transaction);
+        //    dd($transaction);
         foreach ($items as $item) {
             TransactionItem::create([
                 'transaction_id' => $transaction->id,
@@ -99,13 +99,13 @@ class TransactionController extends Controller
 
         return redirect()->route('transactions.create')->with('success', 'Transaction saved successfully.');
     }
-   public function show($customer_id)
-{
-    $user = Auth::id();
-    $customer = Customer::where('id', $customer_id)->where('shopkeeper_id', $user)->firstOrFail();
-    $transactions = Transaction::with('items')->where('customer_id', $customer_id)->get();
-    // dd($customer, $transactions);
-    return view('admin.clients.transections.transection', compact('customer', 'transactions'));
-}
+    public function show($customer_id)
+    {
+        $user = Auth::id();
+        $customer = Customer::where('id', $customer_id)->where('shopkeeper_id', $user)->firstOrFail();
+        $transactions = Transaction::with('items')->where('customer_id', $customer_id)->get();
+        // dd($customer, $transactions);
+        return view('admin.clients.transections.transection', compact('customer', 'transactions'));
+    }
 
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -12,21 +13,16 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
-
-        $user = $request->user(); // 👈 must return logged-in user
+        $user = $request->user();
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthorized'], 401);
         }
-
-        // Only fetch customers for logged-in user
         $customers = Customer::where('shopkeeper_id', $user->id)
-            ->withSum('transactions', 'total')
-            ->get()
+            ->withSum('transactions', 'total')->get()
             ->map(function ($customer) {
                 $customer->calculated_remaining = $customer->transactions_sum_total - $customer->paid_amount;
                 return $customer;
             });
-
         return response()->json([
             'status' => true,
             'data' => $customers,
@@ -45,11 +41,19 @@ class CustomerController extends Controller
         $data['shopkeeper_id'] = $request->user()->id;
         // dd($data);
         Customer::create($data);
-       return response()->json([
+        return response()->json([
             'status' => true,
             'message' => 'Customer created successfully',
         ], 201);
         // return redirect()->route('customers.index')->with('success', 'Customer created successfully!');
     }
+    // public function show($customer_id)
+    // {
+    //     $user = Auth::id();
+    //     $customer = Customer::where('id', $customer_id)->where('shopkeeper_id', $user)->firstOrFail();
+    //     $transactions = Transaction::with('items')->where('customer_id', $customer_id)->get();
+    //     dd($customer, $transactions);
+    //     return view('admin.clients.transections.transection', compact('customer', 'transactions'));
+    // }
 
 }
