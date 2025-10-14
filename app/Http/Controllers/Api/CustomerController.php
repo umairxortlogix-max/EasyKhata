@@ -47,13 +47,4 @@ class CustomerController extends Controller
         ], 201);
         // return redirect()->route('customers.index')->with('success', 'Customer created successfully!');
     }
-    // public function show($customer_id)
-    // {
-    //     $user = Auth::id();
-    //     $customer = Customer::where('id', $customer_id)->where('shopkeeper_id', $user)->firstOrFail();
-    //     $transactions = Transaction::with('items')->where('customer_id', $customer_id)->get();
-    //     dd($customer, $transactions);
-    //     return view('admin.clients.transections.transection', compact('customer', 'transactions'));
-    // }
-
 }

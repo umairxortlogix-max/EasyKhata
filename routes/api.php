@@ -18,8 +18,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customers/app', [CustomerController::class, 'index']);
     Route::post('/customers/store', [CustomerController::class, 'store']);
-    
-
+    Route::post('/transactions/store ', [TransactionController::class, 'store']);
 });
 
 Route::get('/transactions/{customer_id}', [TransactionController::class, 'showTransactions']);
