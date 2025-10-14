@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customers/app', [CustomerController::class, 'index']);
     Route::post('/customers/store', [CustomerController::class, 'store']);
     Route::post('/transactions/store ', [TransactionController::class, 'store']);
+        Route::post('/transections/app', [TransactionController::class, 'index']);
 });
 
 Route::get('/transactions/{customer_id}', [TransactionController::class, 'showTransactions']);
