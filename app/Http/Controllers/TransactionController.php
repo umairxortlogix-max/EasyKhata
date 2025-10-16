@@ -83,7 +83,7 @@ class TransactionController extends Controller
             'shopkeeper_id' => Auth::id(),
             'customer_id' => $request->customer_id,
             'total' => $request->total_amount,
-            'paid' => $request->paid_amount,
+            'paid' => $request->paid_amount ??0.00,
             'remaining' => $request->remaining_amount,
         ]);
         //    dd($transaction);

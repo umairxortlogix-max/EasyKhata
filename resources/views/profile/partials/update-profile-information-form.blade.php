@@ -1,110 +1,172 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100 py-10">
-    <section class="w-full max-w-2xl p-8 rounded-3xl bg-gray-100 shadow-[10px_10px_20px_#d1d5db,-10px_-10px_20px_#ffffff] border border-gray-200">
+<!-- resources/views/profile/edit.blade.php -->
+<style>
 
-        <!-- Header -->
-        <header class="mb-8 text-center">
-            <h2 class="text-2xl font-bold text-gray-800 drop-shadow-sm">
-                {{ __('Profile Information') }}
-            </h2>
-            <p class="mt-2 text-sm text-gray-500">
-                {{ __("Update your account's profile information and email address.") }}
-            </p>
-        </header>
+    /* Custom CSS for Profile Form */
+.profile-form {
+    max-width: 480px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #f1f3f6;
+    border-radius: 20px;
+    box-shadow: 8px 8px 15px #d1d9e6, -8px -8px 15px #ffffff;
+    font-family: 'Poppins', sans-serif;
+}
 
-        <!-- Email Verification Form -->
-        <form id="send-verification" method="POST" action="{{ route('verification.send') }}">
-            @csrf
-        </form>
+.form-group {
+    margin-bottom: 1.5rem;
+}
 
-        <!-- Profile Update Form -->
-        <form method="POST" action="{{ route('profile.update') }}" class="space-y-6">
-            @csrf
-            @method('patch')
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
 
-            <!-- Name -->
-            <div class="p-4 rounded-2xl bg-gray-100 shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff]">
-                <x-input-label for="name" :value="__('Full Name')" class="text-gray-700 font-semibold" />
-                <x-text-input
-                    id="name"
-                    name="name"
-                    type="text"
-                    class="mt-2 block w-full rounded-xl border-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 text-gray-800"
-                    :value="old('name', $user->name)"
-                    required
-                    autofocus
-                    autocomplete="name"
-                />
-                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+.form-input,
+.form-input-file {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: none;
+    border-radius: 12px;
+    background: #f1f3f6;
+    box-shadow: inset 3px 3px 6px #d1d9e6, inset -3px -3px 6px #ffffff;
+    font-size: 1rem;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-input-file:focus {
+    outline: none;
+    box-shadow: inset 2px 2px 5px #c8d0e7, inset -2px -2px 5px #ffffff;
+}
+
+.image-upload {
+    text-align: center;
+}
+
+.image-preview img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    box-shadow: 3px 3px 8px #d1d9e6, -3px -3px 8px #ffffff;
+}
+
+.btn-save {
+    background: #f1f3f6;
+    border: none;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #333;
+    box-shadow: 6px 6px 12px #d1d9e6, -6px -6px 12px #ffffff;
+    transition: all 0.2s ease;
+}
+
+.btn-save:hover {
+    box-shadow: inset 4px 4px 8px #d1d9e6, inset -4px -4px 8px #ffffff;
+}
+
+.error {
+    color: #e63946;
+    font-size: 0.875rem;
+    margin-top: 0.3rem;
+}
+
+.success-message {
+    margin-top: 1rem;
+    color: #16a34a;
+    font-weight: 500;
+    text-align: center;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+</style>
+<form 
+    method="POST" 
+    action="{{ route('profile.update') }}" 
+    enctype="multipart/form-data"
+    class="profile-form"
+>
+    @csrf
+    @method('patch')
+
+    <!-- Profile Image -->
+    <div class="form-group image-upload">
+        <label for="image" class="form-label">Profile Image</label>
+
+        @if ($user->image)
+            <div class="image-preview">
+                <img src="{{ asset('storage/'.$user->image) }}" alt="Profile Image">
             </div>
+        @endif
 
-            <!-- Email -->
-            <div class="p-4 rounded-2xl bg-gray-100 shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff]">
-                <x-input-label for="email" :value="__('Email Address')" class="text-gray-700 font-semibold" />
-                <x-text-input
-                    id="email"
-                    name="email"
-                    type="email"
-                    class="mt-2 block w-full rounded-xl border-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 text-gray-800"
-                    :value="old('email', $user->email)"
-                    required
-                    autocomplete="username"
-                />
-                <x-input-error class="mt-2" :messages="$errors->get('email')" />
+        <input 
+            id="image"
+            name="image"
+            type="file"
+            accept="image/*"
+            class="form-input-file"
+        >
+        <x-input-error class="error" :messages="$errors->get('image')" />
+    </div>
 
-                @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                    <div class="mt-3 p-3 rounded-xl bg-gray-100 shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff]">
-                        <p class="text-sm text-gray-700">
-                            {{ __('Your email address is unverified.') }}
-                        </p>
-                        <button
-                            form="send-verification"
-                            class="mt-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 underline"
-                        >
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
+    <!-- Name -->
+    <div class="form-group">
+        <label for="name" class="form-label">Full Name</label>
+        <input
+            id="name"
+            name="name"
+            type="text"
+            class="form-input"
+            value="{{ old('name', $user->name) }}"
+            required
+        >
+        <x-input-error class="error" :messages="$errors->get('name')" />
+    </div>
 
-                        @if (session('status') === 'verification-link-sent')
-                            <p class="mt-2 text-sm text-green-600 font-medium">
-                                {{ __('A new verification link has been sent to your email address.') }}
-                            </p>
-                        @endif
-                    </div>
-                @endif
-            </div>
+    <!-- Email -->
+    <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input
+            id="email"
+            name="email"
+            type="email"
+            class="form-input"
+            value="{{ old('email', $user->email) }}"
+            required
+        >
+        <x-input-error class="error" :messages="$errors->get('email')" />
+    </div>
 
-            <!-- Phone Number (optional field example) -->
-            <div class="p-4 rounded-2xl bg-gray-100 shadow-[inset_4px_4px_8px_#d1d5db,inset_-4px_-4px_8px_#ffffff]">
-                <x-input-label for="phone" :value="__('Phone Number')" class="text-gray-700 font-semibold" />
-                <input
-                    id="phone"
-                    name="phone"
-                    type="text"
-                    class="mt-2 block w-full rounded-xl border-none focus:ring-2 focus:ring-indigo-400 bg-gray-100 text-gray-800 shadow-inner px-3 py-2"
-                    placeholder="+92 300 1234567"
-                />
-            </div>
+    <!-- Phone -->
+    <div class="form-group">
+        <label for="phone" class="form-label">Phone Number</label>
+        <input
+            id="phone"
+            name="phone"
+            type="text"
+            class="form-input"
+            placeholder="+92 300 1234567"
+            value="{{ old('phone', $user->phone) }}"
+        >
+        <x-input-error class="error" :messages="$errors->get('phone')" />
+    </div>
 
-            <!-- Save Button -->
-            <div class="flex items-center justify-center gap-4 pt-4">
-                <button
-                    type="submit"
-                    class="px-8 py-3 rounded-2xl font-semibold text-gray-700 bg-gray-100 shadow-[6px_6px_12px_#d1d5db,-6px_-6px_12px_#ffffff] hover:shadow-[inset_6px_6px_12px_#d1d5db,inset_-6px_-6px_12px_#ffffff] transition-all duration-200"
-                >
-                    {{ __('Save Changes') }}
-                </button>
+    <!-- Submit -->
+    <div class="form-actions">
+        <button type="submit" class="btn-save">Save Changes</button>
 
-                @if (session('status') === 'profile-updated')
-                    <p
-                        x-data="{ show: true }"
-                        x-show="show"
-                        x-transition
-                        x-init="setTimeout(() => show = false, 2000)"
-                        class="text-sm text-green-600"
-                    >
-                        {{ __('Saved successfully!') }}
-                    </p>
-                @endif
-            </div>
-        </form>
-    </section>
-</div>
+        @if (session('status') === 'profile-updated')
+            <p class="success-message">Saved successfully!</p>
+        @endif
+    </div>
+</form>
