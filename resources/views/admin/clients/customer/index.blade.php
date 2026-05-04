@@ -7,7 +7,7 @@
         .card-modern {
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             border: none;
         }
 
@@ -26,7 +26,7 @@
 
         .form-control:focus {
             border-color: #2575fc;
-            box-shadow: 0 0 6px rgba(37,117,252,0.4);
+            box-shadow: 0 0 6px rgba(37, 117, 252, 0.4);
         }
 
         table {
@@ -98,19 +98,32 @@
                     <input type="hidden" name="total_amount" id="totalAmountInput">
                     <input type="hidden" name="paid_amount" id="paidAmountInput">
                     <input type="hidden" name="remaining_amount" id="remainingAmountInput">
+                    <div class="row">
 
-                    <!-- Customer -->
-                    <div class="mb-3">
-                        <label class="form-label">Select Customer <span class="text-danger">*</span></label>
-                        <select name="customer_id" class="form-control" required>
-                            <option value="">-- Choose Customer --</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('customer_id') <small class="text-danger">{{ $message }}</small> @enderror
+                        <!-- Customer -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Select Customer <span class="text-danger">*</span></label>
+                            <select name="customer_id" class="form-control" required>
+                                <option value="">-- Choose Customer --</option>
+                                @foreach($customers as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('customer_id')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <!-- Manual Date -->
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Manual Date <span class="text-danger">*</span></label>
+                            <input type="date" name="manual_date" class="form-control" >
+                            @error('manual_date')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
                     </div>
-
                     <!-- Item Entry -->
                     <h5 class="section-title">🛒 Item Entry</h5>
                     <div class="row g-2 mb-3">
@@ -124,7 +137,8 @@
                             <input type="number" id="itemPrice" class="form-control" placeholder="Price">
                         </div>
                         <div class="col-md-2">
-                            <button type="button" class="btn btn-success w-100 btn-modern" onclick="addItem()">Add</button>
+                            <button type="button" class="btn btn-success w-100 btn-modern"
+                                onclick="addItem()">Add</button>
                         </div>
                     </div>
 
@@ -151,7 +165,8 @@
 
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Paid Amount</label>
-                            <input type="number" id="paidAmount" class="form-control" placeholder="Enter paid amount" oninput="calculateBalance()">
+                            <input type="number" id="paidAmount" class="form-control" placeholder="Enter paid amount"
+                                oninput="calculateBalance()">
                         </div>
 
                         <div class="col-md-4 mb-3">

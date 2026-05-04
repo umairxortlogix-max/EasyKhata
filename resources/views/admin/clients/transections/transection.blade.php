@@ -556,7 +556,7 @@
                                 </div>
                                 <div>
                                     <p class="summary-label">Date</p>
-                                    <p class="transaction-subtitle">{{ optional($transaction->created_at)->format('d M Y, h:i A') }}</p>
+                                    <p class="transaction-subtitle">{{ optional($transaction->created_at ?? $transaction->create_date)->format('d M Y, h:i A') }}</p>
                                 </div>
                                 <div>
                                     <p class="summary-label">Status</p>

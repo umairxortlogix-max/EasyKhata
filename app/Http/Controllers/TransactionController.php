@@ -24,11 +24,18 @@ class TransactionController extends Controller
         }
 
         // Filtering by date range
-        if ($request->has('date_from') && $request->date_from) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+        // if ($request->has('date_from') && $request->date_from) {
+        //     $query->whereDate('created_at', '>=', $request->date_from);
+        // }
+        // if ($request->has('date_to') && $request->date_to) {
+        //     $query->whereDate('created_at', '<=', $request->date_to);
+        // }
+
+        if($request->filled('date_from')){
+            $query->whereRaw('DATE(create_date) >= ?', [$request->date_from]);
         }
-        if ($request->has('date_to') && $request->date_to) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+        if($request->filled('date_to')){
+            $query->whereRaw('DATE(create_date) <= ?', [$request->date_to]);
         }
 
         $transactions = $query->paginate(10); // Paginate with 10 per page
@@ -53,6 +60,7 @@ class TransactionController extends Controller
             'paid_amount' => 'nullable|numeric',
             'remaining_amount' => 'nullable|numeric',
             'items' => 'nullable|string', // JSON string from form
+            'manual_date' => 'nullable|date',
         ]);
 
         $items = json_decode($request->items, true);
@@ -68,6 +76,7 @@ class TransactionController extends Controller
             'total' => $request->total_amount,
             'paid' => $request->paid_amount ?? 0.00,
             'remaining' => $request->remaining_amount,
+            'create_date' => $request->manual_date ? $request->manual_date : now(),
         ]);
 
         // Save transaction items
@@ -80,7 +89,7 @@ class TransactionController extends Controller
                 'total' => $item['total'],
             ]);
         }
-
+                \Log::info('Transaction created', $transaction->toArray());
         // --- Send SMS to Jazz number ---
         $customer = Customer::find($request->customer_id);
 
@@ -188,11 +197,11 @@ class TransactionController extends Controller
         $toDate = request('to_date');
 
         if ($fromDate) {
-            $baseQuery->whereDate('created_at', '>=', $fromDate);
+            $baseQuery->whereRaw('DATE(create_date) >= ?', [$fromDate]);
         }
 
         if ($toDate) {
-            $baseQuery->whereDate('created_at', '<=', $toDate);
+            $baseQuery->whereRaw('DATE(create_date) <= ?', [$toDate]);
         }
 
         $transactions = $baseQuery->get();
@@ -233,11 +242,11 @@ class TransactionController extends Controller
         $toDate = request('to_date');
 
         if ($fromDate) {
-            $baseQuery->whereDate('created_at', '>=', $fromDate);
+            $baseQuery->whereRaw('DATE(create_date) >= ?', [$fromDate]);
         }
 
         if ($toDate) {
-            $baseQuery->whereDate('created_at', '<=', $toDate);
+            $baseQuery->whereRaw('DATE(create_date) <= ?', [$toDate]);
         }
 
         $transactions = $baseQuery->get();
@@ -273,20 +282,24 @@ class TransactionController extends Controller
             }
 
             // Send via Twilio WhatsApp
-            $phoneNumber = preg_replace('/\D+/', '', $customer->phone);
-            
-            // Format phone number to international format (assuming Pakistan +92)
-            if (substr($phoneNumber, 0, 1) === '0') {
-                $phoneNumber = '92' . substr($phoneNumber, 1);
+            $normalizedPhone = $this->normalizeWhatsappPhone($customer->phone);
+            if (!$normalizedPhone) {
+                \Log::error('WhatsApp sending failed: invalid customer phone format', ['customer_phone' => $customer->phone, 'customer_id' => $customer->id]);
+                return back()->with('error', 'Failed to send via WhatsApp: invalid customer phone number format. Please verify the phone number.');
             }
-            
-            $whatsappNumber = 'whatsapp:+' . $phoneNumber;
+
+            $whatsappNumber = 'whatsapp:+' . $normalizedPhone;
             
             // Clean Twilio WhatsApp number (remove any + or whatsapp: prefix)
             $cleanTwilioNumber = preg_replace('/[^\d]/', '', $twilioWhatsappNumber);
             $twilioNumber = 'whatsapp:+' . $cleanTwilioNumber;
 
             $client = new Client($accountSid, $authToken);
+
+            if ($whatsappNumber === $twilioNumber) {
+                \Log::error('WhatsApp sending failed: destination and sender numbers are identical', ['to' => $whatsappNumber, 'from' => $twilioNumber, 'customer_phone' => $customer->phone]);
+                return back()->with('error', 'Failed to send via WhatsApp: destination number cannot be the same as the Twilio sender number. Please verify the customer phone number and TWILIO_WHATSAPP_NUMBER configuration.');
+            }
 
             // Format message with transaction details
             $messageText = "📋 *EasyKhata Transaction Report*\n\n";
@@ -336,15 +349,54 @@ class TransactionController extends Controller
 
             return back()->with('success', 'Transaction report sent via WhatsApp successfully!');
         } catch (\Exception $e) {
-            \Log::error('WhatsApp sending failed: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
-            
             $errorMsg = $e->getMessage();
-            if (strpos($errorMsg, 'Invalid media URL') !== false) {
+
+            if (strpos($errorMsg, 'Twilio could not find a Channel with the specified From address') !== false) {
+                $errorMsg = 'Twilio could not find a WhatsApp sender channel for the configured TWILIO_WHATSAPP_NUMBER. Ensure that the value in .env is the exact Twilio WhatsApp-enabled phone number and that the number is provisioned for WhatsApp in your Twilio console.';
+            } elseif (strpos($errorMsg, 'Invalid media URL') !== false) {
                 $errorMsg = 'Invalid media URL - For local testing, use ngrok to expose your localhost to the internet.';
             }
-            
+
+            \Log::error('WhatsApp sending failed: ' . $errorMsg, [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'raw_message' => $e->getMessage(),
+                'twilio_from' => $twilioNumber ?? null,
+            ]);
+
             return back()->with('error', 'Failed to send via WhatsApp: ' . $errorMsg);
         }
+    }
+
+    private function normalizeWhatsappPhone($phone)
+    {
+        $digits = preg_replace('/\D+/', '', $phone);
+
+        if (!$digits) {
+            return null;
+        }
+
+        // Local Pakistan format: 03175008093 -> 923175008093
+        if (preg_match('/^0\d{10}$/', $digits)) {
+            return '92' . substr($digits, 1);
+        }
+
+        // International Pakistan format: 923175008093 -> 923175008093
+        if (preg_match('/^92\d{10}$/', $digits)) {
+            return $digits;
+        }
+
+        // International with double zero prefix: 00923175008093 -> 923175008093
+        if (preg_match('/^0092\d{10}$/', $digits)) {
+            return substr($digits, 2);
+        }
+
+        // If the number is already a 10-digit local mobile number without leading zero
+        if (preg_match('/^3\d{9}$/', $digits)) {
+            return '92' . $digits;
+        }
+
+        return null;
     }
 
 }

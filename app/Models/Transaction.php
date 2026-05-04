@@ -9,7 +9,7 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['customer_id', 'shopkeeper_id', 'total', 'paid', 'remaining'];
+    protected $fillable = ['customer_id', 'shopkeeper_id', 'total', 'paid', 'remaining', 'create_date'];
 
     public function customer() {
         return $this->belongsTo(Customer::class);
