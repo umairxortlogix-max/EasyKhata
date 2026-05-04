@@ -30,44 +30,7 @@ class CustomerController extends Controller
         return view('admin.clients.customer.indexcusto', compact('customers'));
     }
 
-    //  public function index()
-    // {
-    //     try {
-    //         $user = Auth::user()->id;
 
-    //         // Customers list with transaction sums
-    //         $customers = Customer::where('shopkeeper_id', $user)
-    //             ->withSum('transactions', 'total')
-    //             ->withSum('transactions', 'paid')
-    //             ->withSum('transactions', 'remaining')
-    //             ->get();
-
-    //         // ✅ Optional: Add custom calculated remaining
-    //         $customers->map(function ($customer) {
-    //             $customer->calculated_remaining = 
-    //                 ($customer->transactions_sum_total ?? 0) - ($customer->transactions_sum_paid ?? 0);
-    //             return $customer;
-    //         });
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => 'Customers fetched successfully',
-    //             'data' => $customers
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => 'Error fetching customers',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    // Show create form
     public function create()
     {
         return view('admin.clients.customer.customer');

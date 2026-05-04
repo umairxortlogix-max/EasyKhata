@@ -31,8 +31,11 @@ Route::middleware(['auth','role:super-admin'])->prefix('admin')->name('admin.')-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
     Route::get('/transactions/{customer}', [TransactionController::class, 'show'])->name('transactions.show');
+    Route::get('/transactions/{customer}/export-pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export-pdf');
+    Route::post('/transactions/{customer}/send-whatsapp', [TransactionController::class, 'sendWhatsAppPdf'])->name('transactions.send-whatsapp');
 
     Route::get('/customers/create', [CustomerController::class, 'create'])->name('customers.create');
     Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
